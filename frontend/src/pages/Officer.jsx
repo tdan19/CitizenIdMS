@@ -1,10 +1,17 @@
 import React from "react";
-
+import Navbar from "../components/navbar/Navbar";
+import { Outlet } from "react-router-dom";
+import OfficerSidebar from "../components/navbar/OfficerSidebar";
 const Officer = () => {
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold mb-4">Officer Page</h1>
-      <p className="text-lg">Welcome to the Officer page!</p>
+    <div className="flex h-screen overflow-hidden">
+      <OfficerSidebar />
+      <div className="flex-1 ml-64 flex flex-col bg-gray-100 overflow-y-auto">
+        <Navbar />
+        <div className="p-4 flex-1">
+          <Outlet />
+        </div>
+      </div>
     </div>
   );
 };

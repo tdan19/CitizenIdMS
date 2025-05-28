@@ -1,4 +1,3 @@
-// frontend/src/components/Admin/UserManager.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 

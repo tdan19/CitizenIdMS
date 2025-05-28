@@ -1,42 +1,43 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+// authMiddleware.js
+export const verifyToken = (req, res, next) => {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
 
-const authMiddleware = async (req, res, next) => {
-  try {
-    // 1. Get token from header
-    const token = req.header("Authorization")?.replace("Bearer ", "");
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "No token, authorization denied",
-      });
-    }
-
-    // 2. Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // 3. Find user
-    const user = await User.findById(decoded.id).select("-password");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // 4. Attach user to request
-    req.user = user;
-    next();
-  } catch (error) {
-    console.error("Auth middleware error:", error);
-    res.status(500).json({
+  if (!token) {
+    return res.status(401).json({
       success: false,
-      message: "Token is not valid",
-      error: error.message,
+      message: "Authorization token required",
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Attach decoded user to request
+    next();
+  } catch (err) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token",
     });
   }
 };
 
-export default authMiddleware;
+export const restrictTo = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user?.role) {
+      return res.status(403).json({
+        success: false,
+        message: "No user role found",
+      });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access restricted to: ${allowedRoles.join(", ")}`,
+      });
+    }
+
+    next();
+  };
+};

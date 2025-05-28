@@ -1,14 +1,15 @@
+// utils/PrivateRoutes.jsx
 import React from "react";
-import { useAuth } from "../context/authContext";
 import { Navigate } from "react-router-dom";
 
 const PrivateRoutes = ({ children }) => {
-  const { user, loading } = useAuth();
+  const token = localStorage.getItem("token");
 
-  if (loading) {
-    return <div>Loading...</div>;
+  if (!token) {
+    return <Navigate to="/login" />;
   }
-  return user ? children : <Navigate to="/login" />;
+
+  return children;
 };
 
 export default PrivateRoutes;

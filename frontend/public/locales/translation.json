@@ -1,0 +1,21 @@
+{
+  "biometrics": {
+    "title": "Welcome",
+    "photo": "Photo",
+    "fingerprint": "Fingerprint",
+    "signature": "Signature",
+    "openCamera": "Open Camera",
+    "capturePhoto": "Capture Photo",
+    "uploadFingerprint": "Upload Fingerprint",
+    "fingerprintHint": "Please upload a fingerprint image file.",
+    "saveSignature": "Save Signature",
+    "clearSignature": "Clear Signature",
+    "clear": "Clear",
+    "retake": "Retake",
+    "uploadAll": "Upload All Biometrics",
+    "uploading": "Uploading...",
+    "missingFields": "Please complete all biometric fields.",
+    "uploadSuccess": "Biometrics uploaded successfully!",
+    "uploadFailed": "Failed to upload biometrics."
+  }
+}

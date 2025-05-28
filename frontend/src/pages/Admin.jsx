@@ -1,16 +1,17 @@
 import React from "react";
-import AdminSidebar from "../components/AdminSidebar.jsx";
-import Navbar from "../components/navbar/Navbar.jsx";
-import AdminDashboard from "../components/dashboard/AdminDashboard.jsx";
+import Navbar from "../components/navbar/Navbar";
 import { Outlet } from "react-router-dom";
+import AdminSidebar from "../components/navbar/AdminSidebar";
 
 const Admin = () => {
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden">
       <AdminSidebar />
-      <div className="flex-1 ml-64 bg-gray-100 min-h-screen">
+      <div className="flex-1 ml-64 flex flex-col bg-gray-100 overflow-y-auto">
         <Navbar />
-        <Outlet />
+        <div className="p-4 flex-1">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

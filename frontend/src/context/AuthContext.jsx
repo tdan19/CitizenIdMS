@@ -1,11 +1,14 @@
 import React, { useState, createContext, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-// Use PascalCase for context name (UserContext instead of userContext)
+
 const UserContext = createContext();
 
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
   useEffect(() => {
     const verifyUser = async () => {
       try {
@@ -22,19 +25,19 @@ const AuthProvider = ({ children }) => {
 
           if (response.data.success) {
             setUser(response.data.user);
+          } else {
+            setUser(null);
           }
         } else {
           setUser(null);
-          setLoading(false);
         }
-      } catch (error) {
-        if (error.response && error.response.data) {
-          setUser(null);
-        }
+      } catch {
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
+
     verifyUser();
   }, []);
 
@@ -48,13 +51,12 @@ const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("token");
-    // Optional: Add redirect or other cleanup
+    navigate("/login"); // Redirect to login page on logout
   };
 
-  // Remove unnecessary div wrapper
   return (
     <UserContext.Provider value={{ user, login, logout, loading }}>
-      {children}
+      {!loading && children}
     </UserContext.Provider>
   );
 };
