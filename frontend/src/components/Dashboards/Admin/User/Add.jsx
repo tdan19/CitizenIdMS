@@ -38,26 +38,49 @@ export default function AddUser({ onSuccess }) {
     if (successMessage) setSuccessMessage("");
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!form.username.trim()) newErrors.username = "Username is required";
-    if (!form.password) newErrors.password = "Password is required";
-    else if (form.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters";
-    if (!form.firstName.trim()) newErrors.firstName = "First name is required";
-    if (!form.lastName.trim()) newErrors.lastName = "Last name is required";
-    if (!form.email.trim()) newErrors.email = "Email is required";
-    else if (!/^\S+@\S+\.\S+$/.test(form.email))
-      newErrors.email = "Invalid email format";
-    if (!form.phone.trim()) newErrors.phone = "Phone is required";
-    if (!form.dateOfBirth) newErrors.dateOfBirth = "Date of birth is required";
-    if (!form.startDate) newErrors.startDate = "Start date is required";
-    if (!form.employeeId.trim())
-      newErrors.employeeId = "Employee ID is required";
+ const validateForm = () => {
+  const newErrors = {};
+  const today = new Date();
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Basic field checks
+  if (!form.username.trim()) newErrors.username = "Username is required";
+  if (!form.password) newErrors.password = "Password is required";
+  else if (form.password.length < 6)
+    newErrors.password = "Password must be at least 6 characters";
+  if (!form.firstName.trim()) newErrors.firstName = "First name is required";
+  if (!form.lastName.trim()) newErrors.lastName = "Last name is required";
+  if (!form.email.trim()) newErrors.email = "Email is required";
+  else if (!/^\S+@\S+\.\S+$/.test(form.email))
+    newErrors.email = "Invalid email format";
+  if (!form.phone.trim()) newErrors.phone = "Phone is required";
+  if (!form.dateOfBirth) newErrors.dateOfBirth = "Date of birth is required";
+  if (!form.startDate) newErrors.startDate = "Start date is required";
+  if (!form.employeeId.trim()) newErrors.employeeId = "Employee ID is required";
+
+   if (form.dateOfBirth) {
+    const dob = new Date(form.dateOfBirth);
+    const age = today.getFullYear() - dob.getFullYear();
+    const hasBirthdayPassed =
+      today.getMonth() > dob.getMonth() ||
+      (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+
+    const exactAge = hasBirthdayPassed ? age : age - 1;
+
+    if (exactAge < 21) {
+      newErrors.dateOfBirth = "User must be at least 21 years old";
+    }
+  }
+
+  if (form.startDate) {
+    const start = new Date(form.startDate);
+    if (start < new Date(today.toDateString())) {
+      newErrors.startDate = "Start date cannot be in the past";
+    }
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();

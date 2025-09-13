@@ -50,10 +50,10 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
     woreda_am: "ድሬ ዳዋ አስተዳደር",
     kebele: "",
     biometrics: null,
-    status: "waiting", // Updated status field to 'waiting'
+    status: "waiting",
     status_history: [
       {
-        status: "waiting", // Track initial status as 'waiting'
+        status: "waiting",
         changed_by: "registrar",
         timestamp: new Date().toISOString(),
       },
@@ -65,8 +65,94 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
   const [formComplete, setFormComplete] = useState(false);
   const [usedIds, setUsedIds] = useState(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [citizens, setCitizens] = useState([]); // For admin view
-  const [searchId, setSearchId] = useState(""); // For citizen status check
+  const [citizens, setCitizens] = useState([]);
+  const [searchId, setSearchId] = useState("");
+  const [errors, setErrors] = useState({});
+  const [dateError, setDateError] = useState("");
+ 
+  // Amharic Unicode range validation
+  const isAmharic = (text) => {
+    const amharicRegex = /^[\u1200-\u137F\s]+$/;
+    return amharicRegex.test(text);
+  };
+
+  // Ethiopian phone number validation
+  const validateEthiopianPhone = (phone) => {
+    const phoneRegex = /^\+2519\d{8}$/;
+    return phoneRegex.test(phone);
+  };
+
+  // Date validation - check if age is at least 21
+  const validateDateOfBirth = (dateString) => {
+    const today = new Date();
+    const birthDate = new Date(dateString);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      return age - 1;
+    }
+    return age;
+  };
+
+  // Validate given date is not in the future
+  const validateGivenDate = (dateString) => {
+    const today = new Date();
+    const givenDate = new Date(dateString);
+    return givenDate <= today;
+  };
+
+  // Handle input changes with validation
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Validate Amharic fields
+    if (name.endsWith('_am')) {
+      if (value && !isAmharic(value)) {
+        setErrors({...errors, [name]: "Please enter Amharic characters only"});
+      } else {
+        const newErrors = {...errors};
+        delete newErrors[name];
+        setErrors(newErrors);
+      }
+    }
+    
+    // Validate phone number
+    if (name === 'phone') {
+      if (value && !validateEthiopianPhone(value)) {
+        setErrors({...errors, [name]: "Phone must be in format: +2519xxxxxxxx"});
+      } else {
+        const newErrors = {...errors};
+        delete newErrors[name];
+        setErrors(newErrors);
+      }
+    }
+    
+    // Validate date fields
+    if (name === 'dobGregorian') {
+      if (value) {
+        const age = validateDateOfBirth(value);
+        if (age < 21) {
+          setDateError("Applicant must be at least 21 years old");
+        } else {
+          setDateError("");
+        }
+      }
+    }
+    
+    if (name === 'given_date') {
+      if (value && !validateGivenDate(value)) {
+        setDateError("Given date cannot be in the future");
+      } else {
+        setDateError("");
+      }
+    }
+    
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
 
   // Calculate expiration date when given_date changes
   useEffect(() => {
@@ -101,13 +187,6 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
     }
   }, [userRole]);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   const handleBiometricsComplete = (biometricData) => {
     setFormData({
       ...formData,
@@ -137,14 +216,38 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
     });
     setCurrentStep(1);
     setFormComplete(false);
+    setErrors({});
+    setDateError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Final validation before submission
     if (!formComplete) {
       alert("Please complete all form steps including biometrics");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Check for validation errors
+    if (Object.keys(errors).length > 0) {
+      alert("Please fix validation errors before submitting");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Check date validation
+    if (dateError) {
+      alert(dateError);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate phone number one more time before submission
+    if (formData.phone && !validateEthiopianPhone(formData.phone)) {
+      alert("Please enter a valid Ethiopian phone number in the format: +2519xxxxxxxx");
       setIsSubmitting(false);
       return;
     }
@@ -165,7 +268,7 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
         JSON.stringify([
           ...formData.status_history,
           {
-            status: "waiting", // Change status to 'waiting' upon submission
+            status: "waiting",
             changed_by: "registrar",
             timestamp: new Date().toISOString(),
           },
@@ -198,9 +301,11 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
 
       if (response.status >= 200 && response.status < 300) {
         alert(
-          "Registration submitted successfully! A new form has been prepared."
+          "Registration submitted successfully!"
         );
         resetForm();
+        navigate("/registrar")
+
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -216,7 +321,7 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
       const response = await axios.put(
         `http://localhost:5000/api/citizens/${citizenId}/status`,
         {
-          status: newStatus, // status updated to 'approved', 'rejected', or 'waiting'
+          status: newStatus,
           changed_by: userRole,
           timestamp: new Date().toISOString(),
         }
@@ -236,7 +341,7 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
       const response = await axios.put(
         `http://localhost:5000/api/citizens/${citizenId}/status`,
         {
-          status: "printed", // Change to 'printed' once it reaches this step
+          status: "printed",
           changed_by: userRole,
           timestamp: new Date().toISOString(),
         }
@@ -269,6 +374,7 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
 
   const nextStep = () => {
     if (currentStep === 1) {
+      // Check required fields
       if (
         !formData.firstName ||
         !formData.middleName ||
@@ -277,6 +383,24 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
         !formData.given_date
       ) {
         alert("Please fill in all required personal information fields");
+        return;
+      }
+      
+      // Check validation errors
+      if (Object.keys(errors).length > 0) {
+        alert("Please fix validation errors before proceeding");
+        return;
+      }
+      
+      // Check date validation
+      if (dateError) {
+        alert(dateError);
+        return;
+      }
+
+      // Validate phone number if provided
+      if (formData.phone && !validateEthiopianPhone(formData.phone)) {
+        alert("Please enter a valid Ethiopian phone number in the format: +2519xxxxxxxx");
         return;
       }
     }
@@ -326,7 +450,7 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                               ? "bg-red-200 text-red-800"
                               : citizen.status === "printed"
                               ? "bg-blue-200 text-blue-800"
-                              : citizen.status === "waiting" // Add waiting status
+                              : citizen.status === "waiting"
                               ? "bg-yellow-200 text-yellow-800"
                               : "bg-gray-200 text-gray-800"
                           }`}
@@ -569,6 +693,11 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                 Demographic Data{" "}
                 <span className="text-stone-400">| የሕዝብ ቆጠራ መረጃ</span>
               </h2>
+              {dateError && (
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+                  {dateError}
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-xs font-semibold text-stone-600 mb-1">
@@ -683,10 +812,15 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                       name="firstName_am"
                       value={formData.firstName_am}
                       onChange={handleChange}
-                      className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-700"
+                      className={`w-full border rounded-lg px-3 py-2 text-stone-700 ${
+                        errors.firstName_am ? "border-red-500" : "border-stone-300"
+                      }`}
                       placeholder="የመጀመሪያ ስም"
                       required
                     />
+                    {errors.firstName_am && (
+                      <p className="text-red-500 text-xs mt-1">{errors.firstName_am}</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -713,10 +847,15 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                       name="middleName_am"
                       value={formData.middleName_am}
                       onChange={handleChange}
-                      className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-700"
+                      className={`w-full border rounded-lg px-3 py-2 text-stone-700 ${
+                        errors.middleName_am ? "border-red-500" : "border-stone-300"
+                      }`}
                       placeholder="የአባት ስም"
                       required
                     />
+                    {errors.middleName_am && (
+                      <p className="text-red-500 text-xs mt-1">{errors.middleName_am}</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -743,10 +882,15 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                       name="lastName_am"
                       value={formData.lastName_am}
                       onChange={handleChange}
-                      className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-700"
+                      className={`w-full border rounded-lg px-3 py-2 text-stone-700 ${
+                        errors.lastName_am ? "border-red-500" : "border-stone-300"
+                      }`}
                       placeholder="የአያት ስም"
                       required
                     />
+                    {errors.lastName_am && (
+                      <p className="text-red-500 text-xs mt-1">{errors.lastName_am}</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -789,9 +933,18 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-700"
-                    placeholder="Phone Number / ስልክ ቁጥር"
+                    className={`w-full border rounded-lg px-3 py-2 text-stone-700 ${
+                      errors.phone ? "border-red-500" : "border-stone-300"
+                    }`}
+                    placeholder="+2519xxxxxxxx"
+                    required
                   />
+                  {errors.phone && (
+                    <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                  )}
+                  <p className="text-xs text-stone-400 mt-1">
+                    Format: +2519xxxxxxxx (e.g., +251947169355)
+                  </p>
                 </div>
               </div>
 
@@ -800,9 +953,6 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                 Location <span className="text-stone-400">| አድራሻ</span>
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {/* Region, Zone, Woreda, Kebele fields styled similarly */}
-                {/* ...repeat similar style for all selects as above... */}
-                {/* Example for Region */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs font-semibold text-stone-600 mb-1">
@@ -833,8 +983,6 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                     </select>
                   </div>
                 </div>
-                {/* ...repeat for zone, woreda, kebele... */}
-                {/* ...existing code for other selects... */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs font-semibold text-stone-600 mb-1">
@@ -925,7 +1073,9 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                     !formData.middleName ||
                     !formData.lastName ||
                     !formData.dobGregorian ||
-                    !formData.given_date
+                    !formData.given_date ||
+                    Object.keys(errors).length > 0 ||
+                    dateError
                   }
                 >
                   Next <ArrowBigRight className="w-5 h-5" />
@@ -965,7 +1115,7 @@ const RegistrarDataForm = ({ userRole = "registrar" }) => {
                   type="submit"
                   onClick={handleSubmit}
                   className="flex items-center gap-2 bg-blue-700 text-white px-8 py-2 rounded-lg font-semibold shadow hover:bg-blue-800 disabled:bg-blue-300 transition"
-                  disabled={!formComplete || isSubmitting}
+                  disabled={!formComplete || isSubmitting || Object.keys(errors).length > 0 || dateError}
                 >
                   <Send className="w-5 h-5" />
                   {isSubmitting ? "Submitting..." : "Submit"}
