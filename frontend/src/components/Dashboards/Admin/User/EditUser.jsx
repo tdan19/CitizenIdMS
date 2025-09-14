@@ -243,9 +243,9 @@ export default function EditUser() {
                 className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select Role</option>
-                <option value="employee">Employee</option>
-                <option value="manager">Manager</option>
-                <option value="hr">HR</option>
+                <option value="employee">Registrar</option>
+                <option value="manager">Supervisor</option>
+                <option value="hr">Officer</option>
               </select>
             </div>
           </div>

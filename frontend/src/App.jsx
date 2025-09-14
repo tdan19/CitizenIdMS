@@ -29,11 +29,12 @@ import IdRenewal from "./components/Dashboards/Registrar/IdRenewal.jsx";
 import Monitor from "./components/Dashboards/Supervisor/Monitor.jsx";
 import PrintedId from "./components/Dashboards/Officer/printedId.jsx";
 import CitizensList from "./components/Dashboards/Admin/User/CitizensList.jsx";
+import RoleSelection from "./pages/Role.jsx";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<RoleSelection />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
