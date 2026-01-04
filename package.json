@@ -1,4 +1,11 @@
 {
+  "name": "CitizenIdMS",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "gissy",
+    "start": "gissy"
+  },
   "dependencies": {
     "gissy": "^1.2.1"
   }

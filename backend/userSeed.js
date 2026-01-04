@@ -1,11 +1,20 @@
 import User from "./models/User.js";
 import connectDatabase from "./db/db.js";
 import dotenv from "dotenv";
+
 dotenv.config();
 
 const userRegister = async () => {
-  connectDatabase();
+  await connectDatabase(); // ✅ now safe
+
   try {
+    const adminExists = await User.findOne({ email: "admin@example.com" });
+
+    if (adminExists) {
+      console.log("Admin user already exists.");
+      process.exit(0);
+    }
+
     const newUser = new User({
       firstName: "Admin",
       lastName: "User",
@@ -21,10 +30,13 @@ const userRegister = async () => {
       profileImage: null,
       isActive: true,
     });
+
     await newUser.save();
-    console.log("Admin user seeded successfully.");
+    console.log("✅ Admin user seeded successfully.");
+    process.exit(0);
   } catch (error) {
     console.error("Error seeding user:", error);
+    process.exit(1);
   }
 };
 
