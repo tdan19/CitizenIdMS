@@ -8,10 +8,10 @@ const getDashboardPath = (role) => {
   const normalizedRole = role.toLowerCase();
   const paths = {
     admin: "/admin",
-    registrar: "/registrar",
-    supervisor: "/supervisor",
-    officer: "/officer",
-    citizen: "/citizen",
+    Registrar: "/registrar",
+    Supervisor: "/supervisor",
+    Officer: "/officer",
+    Citizen: "/citizen",
   };
   return paths[normalizedRole] || "/";
 };

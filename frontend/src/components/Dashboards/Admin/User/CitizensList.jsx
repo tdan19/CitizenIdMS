@@ -16,7 +16,7 @@ const CitizensList = () => {
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  // Fetch all citizens regardless of status or printStatus
+ 
   const fetchCitizens = async () => {
     setLoading(true);
     setError(null);
@@ -113,7 +113,7 @@ const CitizensList = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="pl-10 pr-4 py-2 border border-stone-300 rounded-lg bg-white text-stone-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
           >
-            <option value="all">All Statuses</option>
+            <option value="all">All Status</option>
             <option value="waiting">Waiting</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>

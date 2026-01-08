@@ -7,7 +7,7 @@ const RoleSelection = () => {
   const navigate = useNavigate();
 
   const roles = [
-    { name: "Admin", icon: <User /> },
+    { name: "admin", icon: <User /> },
     { name: "Citizen", icon: <FaUser /> },
     { name: "Registrar", icon: <FaIdCard /> },
     { name: "Officer", icon: <FaUserTie /> },
